@@ -1,0 +1,121 @@
+#include <NewPing.h>
+#include <WiFi.h>
+#include <UniversalTelegramBot.h>
+
+// Define pins for ultrasonic sensors
+#define TRIGGER_PIN_FRONT  12
+#define ECHO_PIN_FRONT     11
+#define MAX_DISTANCE       200 // Maximum distance (in cm)
+
+#define TRIGGER_PIN_LEFT   10
+#define ECHO_PIN_LEFT      9
+
+#define TRIGGER_PIN_RIGHT  8
+#define ECHO_PIN_RIGHT     7
+
+// Define pins for sound and moisture sensors
+#define SOUND_SENSOR_PIN   A0
+#define MOISTURE_SENSOR_PIN A1
+
+// Define motor control pins
+#define MOTOR_PIN_LEFT_FORWARD  2
+#define MOTOR_PIN_LEFT_BACKWARD 3
+#define MOTOR_PIN_RIGHT_FORWARD 4
+#define MOTOR_PIN_RIGHT_BACKWARD 5
+
+#define SOUND_THRESHOLD 500
+#define MOISTURE_THRESHOLD 300
+
+// Replace with your WiFi and Telegram credentials
+const char* ssid = "your_SSID";
+const char* password = "your_PASSWORD";
+const char* botToken = "your_BOT_TOKEN";
+const char* chatID = "your_CHAT_ID";
+
+WiFiClient client;
+UniversalTelegramBot bot(botToken, client);
+
+NewPing sonarFront(TRIGGER_PIN_FRONT, ECHO_PIN_FRONT, MAX_DISTANCE);
+NewPing sonarLeft(TRIGGER_PIN_LEFT, ECHO_PIN_LEFT, MAX_DISTANCE);
+NewPing sonarRight(TRIGGER_PIN_RIGHT, ECHO_PIN_RIGHT, MAX_DISTANCE);
+
+void setup() {
+  Serial.begin(115200);
+
+  // Initialize motor control pins
+  pinMode(MOTOR_PIN_LEFT_FORWARD, OUTPUT);
+  pinMode(MOTOR_PIN_LEFT_BACKWARD, OUTPUT);
+  pinMode(MOTOR_PIN_RIGHT_FORWARD, OUTPUT);
+  pinMode(MOTOR_PIN_RIGHT_BACKWARD, OUTPUT);
+
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("Connected to WiFi");
+}
+
+void loop() {
+  // Read ultrasonic sensors
+  int distanceFront = sonarFront.ping_cm();
+  int distanceLeft = sonarLeft.ping_cm();
+  int distanceRight = sonarRight.ping_cm();
+
+  // Read sound level
+  int soundLevel = analogRead(SOUND_SENSOR_PIN);
+
+  // Read moisture level
+  int moistureLevel = analogRead(MOISTURE_SENSOR_PIN);
+
+  // Print sensor data for debugging
+  Serial.print("Front Distance: ");
+  Serial.print(distanceFront);
+  Serial.print(" cm, Left Distance: ");
+  Serial.print(distanceLeft);
+  Serial.print(" cm, Right Distance: ");
+  Serial.print(distanceRight);
+  Serial.print(" cm, Sound Level: ");
+  Serial.print(soundLevel);
+  Serial.print(", Moisture Level: ");
+  Serial.println(moistureLevel);
+
+  // Movement control based on distance
+  if (distanceFront > 20) {
+    // Move forward
+    digitalWrite(MOTOR_PIN_LEFT_FORWARD, HIGH);
+    digitalWrite(MOTOR_PIN_LEFT_BACKWARD, LOW);
+    digitalWrite(MOTOR_PIN_RIGHT_FORWARD, HIGH);
+    digitalWrite(MOTOR_PIN_RIGHT_BACKWARD, LOW);
+  } else if (distanceFront < 10) {
+    // Move backward
+    digitalWrite(MOTOR_PIN_LEFT_FORWARD, LOW);
+    digitalWrite(MOTOR_PIN_LEFT_BACKWARD, HIGH);
+    digitalWrite(MOTOR_PIN_RIGHT_FORWARD, LOW);
+    digitalWrite(MOTOR_PIN_RIGHT_BACKWARD, HIGH);
+  } else {
+    // Stop
+    digitalWrite(MOTOR_PIN_LEFT_FORWARD, LOW);
+    digitalWrite(MOTOR_PIN_LEFT_BACKWARD, LOW);
+    digitalWrite(MOTOR_PIN_RIGHT_FORWARD, LOW);
+    digitalWrite(MOTOR_PIN_RIGHT_BACKWARD, LOW);
+  }
+
+  // Sound detection and response
+  if (soundLevel > SOUND_THRESHOLD) {
+    // Play soothing sound - this is a placeholder for actual implementation
+    Serial.println("Baby crying detected, play soothing sound.");
+  }
+
+  // Moisture detection and notification
+  if (moistureLevel > MOISTURE_THRESHOLD) {
+    sendTelegramMessage("Spill detected in the baby room!");
+  }
+
+  delay(1000); // Check every second
+}
+
+void sendTelegramMessage(String message) {
+  bot.sendMessage(chatID, message, "Markdown");
+}

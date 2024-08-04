@@ -1,0 +1,10 @@
+Install Libraries:
+
+NewPing
+UniversalTelegramBot
+Install Board Package:
+
+ESP32 Board Package
+Verify Camera Library:
+
+Included with the ESP32 Board Package

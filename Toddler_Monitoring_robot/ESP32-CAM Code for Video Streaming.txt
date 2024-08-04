@@ -1,0 +1,53 @@
+#include <WiFi.h>
+#include "esp_camera.h"
+
+// Replace with your network credentials
+const char* ssid = "your_SSID";
+const char* password = "your_PASSWORD";
+
+// Set the camera module configuration
+#define CAMERA_MODEL_AI_THINKER
+
+#include "camera_pins.h"
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("Connected to WiFi");
+
+  camera_config_t config;
+  config.ledc_channel = LEDC_CHANNEL_0;
+  config.ledc_timer = LEDC_TIMER_0;
+  config.pin_d7 = 13;
+  config.pin_d6 = 12;
+  config.pin_d5 = 14;
+  config.pin_d4 = 15;
+  config.pin_d3 = 2;
+  config.pin_d2 = 4;
+  config.pin_d1 = 0;
+  config.pin_d0 = 5;
+  config.pin_xclk = 21;
+  config.pin_pclk = 22;
+  config.pin_vsync = 25;
+  config.pin_href = 23;
+  config.pin_sscb_sda = 26;
+  config.pin_sscb_scl = 27;
+  config.camera_model = CAMERA_MODEL_AI_THINKER;
+  config.jpeg_quality = 12;
+  config.fb_count = 1;
+
+  esp_camera_init(&config);
+
+  Serial.print("Camera Stream Ready at: http://");
+  Serial.print(WiFi.localIP());
+  Serial.println(":81");
+}
+
+void loop() {
+  // Nothing to do here
+}
