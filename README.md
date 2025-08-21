@@ -4,7 +4,7 @@
 This project involves creating a robot that follows a baby, detects crying, and sends notifications to parents. It uses an ESP32 for sensor control and notifications, and an ESP32-CAM for video streaming.
 
 ## Components Used
-- **ESP32**: Main controller
+- **Arduino UNO**: Main controller
 - **ESP32-CAM**: Video streaming
 - **Ultrasonic Sensors**: For distance measurement
 - **Sound Sensor**: To detect crying
